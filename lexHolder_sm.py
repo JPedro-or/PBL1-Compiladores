@@ -14,6 +14,11 @@ def run(text):
 # CONSTANTS
 ###
 DIGITS = '0123456789'
+opAritmeticos = [42, 43, 45, 47]#hashcodes dos operadores aritmético
+###
+# UNICODES
+###
+
 
 ###
 # ERRORS
@@ -114,60 +119,18 @@ class Lexer:
     def next_char(self):
         self.pos += 1
         self.current_char = self.text[self.pos] if self.pos < len(self.text) else None
+    
+    def prev_char(self):
+        self.pos -= 1 if self.pos >= 0 else None
+        self.current_char = self.text[self.pos] 
 
-    def make_tokens(self):
+    def make_tokens(self):# função que vai iniciar a máquina de estados no estado q0
         tokens = []
         while self.current_char != None:
-            #
-            # ESPAÇO OU TAB
-            #
-            if self.current_char in ' \t':
-                self.next_char()
-            #
-            # DIGITOS
-            #
-            elif self.current_char in DIGITS:
-                tokens.append(self.make_number())
-            #
-            # OPERADORES RELACIONAIS
-            #
-            elif self.current_char == '=':
-                tokens.append(Token(TT_EQUAL))
-                self.next_char()
-            elif self.current_char == '<':
-                tokens.append(Token(TT_LTHAN))
-                self.next_char()
-            elif self.current_char == '++':
-                tokens.append(Token(TT_PLUS_PLUS))
-                self.next_char()
-            #
-            # DELIMITADORES
-            #
-            elif self.current_char == ';':
-                tokens.append(Token(TT_SEMICOLON))
-                self.next_char()
-            elif self.current_char == '(':
-                tokens.append(Token(TT_LPAREN))
-                self.next_char()
-            elif self.current_char == ')':
-                tokens.append(Token(TT_RPAREN))
-                self.next_char()
-            elif self.current_char == '{':
-                tokens.append(Token(TT_LCURBRACK))
-                self.next_char()
-            elif self.current_char == '}':
-                tokens.append(Token(TT_RCURBRACK)) 
-                self.next_char()
-            elif self.current_char == '[':
-                tokens.append(Token(TT_RBRACK))
-                self.next_char()
-            else:
-                char = self.current_char
-                self.next_char()
-                return [], IllegalCharError("'" + char + "'")
-        return tokens, None
+            self.q0(tokens)
+        return tokens, None   
 
-    def make_number(self):
+    def q1(self):# Vai definir os tokens de digitos, ints e pontos flutuantes
         num_str = ''
         dot_count = 0
 
@@ -184,3 +147,52 @@ class Lexer:
             return Token(TT_INT, int(num_str))
         else:
             return Token(TT_FLOAT, float(num_str))
+    
+    def q0(self, tokens):#q0 vai ser o node inicial da máquina e vai chamar os outros nodes. 
+                         #Cada node vai corresponder a uma classificação na tabela de expressão regular (ex. Operadores aritméticos é o node q2)
+        #                         
+        # ESPAÇO OU TAB
+        #
+        if self.current_char in ' \t':
+            self.next_char()
+        #
+        # DIGITOS
+        #
+        elif self.current_char in DIGITS:
+            tokens.append(self.q1())
+        #
+        # OPERADORES ARITMÉTICOS
+        #
+        elif ord(self.current_char) in opAritmeticos:
+            tokens.append(self.q2()) 
+            self.next_char()
+    
+        else:
+            char = self.current_char
+            self.next_char()
+            return [], IllegalCharError("'" + char + "'")
+        #return tokens, None
+
+    def q2(self):
+        if self.current_char == '+':
+            self.next_char()
+            if self.current_char == '+':
+                return Token(TT_PLUS_PLUS)
+            else:
+                self.prev_char()
+                return Token(TT_PLUS)
+        elif self.current_char == '-':
+            self.next_char()
+            if self.current_char == '-':
+                return Token(TT_MINUS_MINUS)
+            else:
+                self.prev_char()
+                return Token(TT_MINUS)
+        elif self.current_char == '/':
+            return Token(TT_DIV)
+        elif self.current_char == '*':
+            return Token(TT_MULT)
+        
+        else:
+            char = self.current_char
+            return [], IllegalCharError("'" + char + "'")
