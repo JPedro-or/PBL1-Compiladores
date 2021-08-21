@@ -1,6 +1,4 @@
-with open("input-lex.txt") as file:
-    #data = file.readlines()
-    text = file.read() #in case it can read token by token with this methods
+
 ###
 # RUN
 ###
@@ -8,94 +6,52 @@ def run(text):
     lexer = Lexer(text)
     tokens, error = lexer.make_tokens()
 
-    return tokens, error
+    return tokens
 
 ###
 # CONSTANTS
 ###
 DIGITS = '0123456789'
 opAritmeticos = [42, 43, 45, 47]#hashcodes dos operadores aritmético
-###
-# UNICODES
-###
-
 
 ###
 # ERRORS
 ###
-class Error:
-    def __init__(self, error_name, details):
-        self.error_name = error_name
-        self.details = details
-    
-    def as_string(self):
-        result = f'{self.error_name}: {self.details}'
-        return result
+#class Error:
+#    def __init__(self, pos_start, pos_end, error_name, details):
+#        self.pos_start = pos_start
+#        self.pos_end = pos_end
+#        self.error_name = error_name
+#        self.details = details
+#    
+#    def as_string(self):
+#        result = f'{self.error_name}: {self.details}'
+#       return result
 
-class IllegalCharError(Error):
-    def __init__(self, details):
-        super().__init__('illegal Character', details)
+#class IllegalCharError(Error):
+#    def __init__(self, details):
+#        super().__init__('illegal Character', details)
 
 ###
-# TOKENS
+# TOKEN SIGLAS
 ###   
-#
-#DELIMITADORES
-#
-TT_LPAREN = 'LPAREN'
-TT_RPAREN = 'RPAREN'
-TT_LCURBRACK = 'CHAVE_E'
-TT_RCURBRACK = 'CHAVE_D'
-TT_LBRACK = 'COLCHETE_E'
-TT_RBRACK = 'COLCHETE_D'
-TT_SEMICOLON = 'PONTOV'
-TT_COLON = 'VIRGULA'
-TT_DOT = 'PONTO'
-#
-#PALAVRAS RESERVADAS
-#
-TT_INT = 'INTEIRO'
-TT_FLOAT = 'FLOAT'
-TT_REAL = 'REAL'
-TT_BOOL = 'BOOLEANO'
-TT_CHAR = 'CHAR'
-TT_CHAIN = 'CADEIA'
-TT_TRUE = 'VERDADEIRO'
-TT_FALSE = 'FALSO'
-TT_FOR = 'PARA'
-TT_PRINT = 'ESCREVA'
-TT_ALGO = 'ALGORITMO'
-TT_VAR = 'VARIAVEIS'
-TT_REG = 'REGISTO'
-TT_FUNC = 'FUNCAO'
-TT_RETURN = 'RETORNO'
-TT_EMPTY = 'VAZIO'
-TT_IF = 'SE'
-TT_ELIF = 'SENAO'
-TT_WHILE = 'ENQUANTO'
-TT_READ = 'LEIA'
-TT_WRTIE = 'ESCREVA'
-TT_CONST = 'CONSTANTES'
+PRE = 'PRE'
+IDE = 'IDE'
+NRO = 'NRO'
+DEL = 'DEL'
+REL = 'REL'
+LOG = 'LOG'
+ART = 'ART'
+SIB = 'SIB'
+SII = 'SII'
+CMF = 'CMF'
+NMF = 'NMF'
+CAR = 'CAR'
+CaMF = 'CaMF'
+CoMF = 'CoMF'
+OpMF = 'OpMF'
+CAD = 'CAD'
 
-#
-# OPERADORES ARITMÉTICOS
-#
-TT_PLUS_PLUS = 'MAIS_MAIS'
-TT_PLUS = 'MAIS'
-TT_MINUS = 'MENOS'
-TT_MULT = 'MULTIPLICA'
-TT_DIV = 'DIVIDE'
-TT_MINUS_MINUS = 'MENOS_MENOS'
-
-#
-# OPERADORES RELACIONAIS
-#
-TT_EQUAL = 'IGUAL'
-TT_LTHAN = 'MENOR'
-TT_GTHAN = 'MAIOR'
-TT_NEQUAL = 'DIFERENTE'
-TT_EQUALTO = 'IGUAL A'
-TT_LTEQUAL = ''
 
 class Token:
     def __init__(self, type_, value = None):
@@ -103,32 +59,87 @@ class Token:
         self.value = value
     
     def __repr__(self):
-        if self.value: return f'{self.type}:{self.value}'
+        if self.value: return f'{self.type}: {self.value}'
         return f'{self.type}'
 
-###
-# LEXER
-###
+class Position:#mantem o valor da linha e coluna
+    def __init__(self, indx, ln, col):
+        self.indx = indx
+        self.ln = ln
+        self.col = col
+    
+    def advance(self, current_char):
+        self.indx += 1
+        self.col += 1
+
+        if current_char == '\n':
+            self.ln += 1
+            self.col = 0
+        return self
+    
+    def retreat(self, current_char):
+        if self.col != 0:
+            self.indx -= 1 
+            self.col -= 1
+        return self
+    
+    def copy(self):
+        return Position(self.indx, self.ln, self.col)
+
+
 class Lexer:
     def __init__(self, text):
         self.text = text
-        self.pos = -1
+        self.pos = Position(-1, 0, -1)
         self.current_char = None
         self.next_char()
     
     def next_char(self):
-        self.pos += 1
-        self.current_char = self.text[self.pos] if self.pos < len(self.text) else None
+        self.pos.advance(self.current_char)
+        self.current_char = self.text[self.pos.indx] if self.pos.indx < len(self.text) else None
     
     def prev_char(self):
-        self.pos -= 1 if self.pos >= 0 else None
-        self.current_char = self.text[self.pos] 
+        self.pos.retreat(self.current_char)
+        self.current_char = self.text[self.pos.indx] 
 
     def make_tokens(self):# função que vai iniciar a máquina de estados no estado q0
         tokens = []
+        er_list = []
         while self.current_char != None:
             self.q0(tokens)
         return tokens, None   
+    
+    def q0(self, tokens):#q0 vai ser o node inicial da máquina e vai chamar os outros nodes. 
+                         #Cada node vai corresponder a uma classificação na tabela de expressão regular (ex. Operadores aritméticos é o node q2)
+        #                         
+        # ESPAÇO OU TAB
+        #
+        if self.current_char in ' \t\n':
+            self.next_char()
+        #
+        # DIGITOS
+        #
+        elif self.current_char in DIGITS:
+            tk_out_str = ""
+            tokens.append(self.pos.ln)
+            tokens.append(self.q1())
+        #
+        # OPERADORES ARITMÉTICOS
+        #
+        elif ord(self.current_char) in opAritmeticos:
+            tokens.append(self.pos.ln) 
+            tokens.append(self.q2())
+            self.next_char()
+        
+        elif self.current_char == 'EOF':
+            print("Hello")
+        
+        else:
+            error_list.append(self.pos.ln)
+            error_list.append(self.q14())
+            self.next_char()
+            
+        #return tokens, None
 
     def q1(self):# Vai definir os tokens de digitos, ints e pontos flutuantes
         num_str = ''
@@ -144,55 +155,39 @@ class Lexer:
             self.next_char()
         
         if dot_count == 0:
-            return Token(TT_INT, int(num_str))
+            return Token(NRO, int(num_str))
         else:
-            return Token(TT_FLOAT, float(num_str))
-    
-    def q0(self, tokens):#q0 vai ser o node inicial da máquina e vai chamar os outros nodes. 
-                         #Cada node vai corresponder a uma classificação na tabela de expressão regular (ex. Operadores aritméticos é o node q2)
-        #                         
-        # ESPAÇO OU TAB
-        #
-        if self.current_char in ' \t':
-            self.next_char()
-        #
-        # DIGITOS
-        #
-        elif self.current_char in DIGITS:
-            tokens.append(self.q1())
-        #
-        # OPERADORES ARITMÉTICOS
-        #
-        elif ord(self.current_char) in opAritmeticos:
-            tokens.append(self.q2()) 
-            self.next_char()
-    
-        else:
-            char = self.current_char
-            self.next_char()
-            return [], IllegalCharError("'" + char + "'")
-        #return tokens, None
+            return Token(NRO, float(num_str))
 
-    def q2(self):
+    def q2(self):#vai definir os operadores aritméticos
         if self.current_char == '+':
+            token_str = self.current_char
             self.next_char()
             if self.current_char == '+':
-                return Token(TT_PLUS_PLUS)
+                token_str += self.current_char
+                return Token(ART, token_str)
             else:
                 self.prev_char()
-                return Token(TT_PLUS)
+                return Token(ART, token_str)
+
         elif self.current_char == '-':
+            token_str = self.current_char
             self.next_char()
             if self.current_char == '-':
-                return Token(TT_MINUS_MINUS)
+                token_str += self.current_char
+                return Token(ART, token_str)
             else:
                 self.prev_char()
-                return Token(TT_MINUS)
+                return Token(ART, token_str)
+
         elif self.current_char == '/':
-            return Token(TT_DIV)
+            return Token(ART, self.current_char)
+
         elif self.current_char == '*':
-            return Token(TT_MULT)
+            return Token(ART, self.current_char)
         
         else:
-            char = self.current_char
-            return [], IllegalCharError("'" + char + "'")
+            return q14()
+
+    def q14(self):#Erro de símbolo inválido
+        return Token(SII, self.current_char)
