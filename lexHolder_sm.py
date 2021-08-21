@@ -2,6 +2,9 @@
 ###
 # RUN
 ###
+from typing import Counter
+
+
 def run(text):
     lexer = Lexer(text)
     tokens, error = lexer.make_tokens()
@@ -12,7 +15,11 @@ def run(text):
 # CONSTANTS
 ###
 DIGITS = '0123456789'
-opAritmeticos = [42, 43, 45, 47]#hashcodes dos operadores aritmético
+#unicode de cada linha da tabela
+opAritmeticos = [42, 43, 45, 47]
+delimitadores = [91, 93, 123, 125, 40, 41, 59, 44, 46]
+opLogicos = [38, 124, 33]
+delComentario = [37]
 
 ###
 # ERRORS
@@ -104,12 +111,12 @@ class Lexer:
 
     def make_tokens(self):# função que vai iniciar a máquina de estados no estado q0
         tokens = []
-        er_list = []
+        errors = []
         while self.current_char != None:
-            self.q0(tokens)
+            self.q0(tokens, errors)
         return tokens, None   
     
-    def q0(self, tokens):#q0 vai ser o node inicial da máquina e vai chamar os outros nodes. 
+    def q0(self, tokens, errors):#q0 vai ser o node inicial da máquina e vai chamar os outros nodes. 
                          #Cada node vai corresponder a uma classificação na tabela de expressão regular (ex. Operadores aritméticos é o node q2)
         #                         
         # ESPAÇO OU TAB
@@ -131,12 +138,28 @@ class Lexer:
             tokens.append(self.q2())
             self.next_char()
         
+        elif ord(self.current_char) in delimitadores:
+            tokens.append(self.pos.ln)
+            tokens.append(self.q3())
+            self.next_char()
+        
+        elif ord(self.current_char) in delComentario:
+            if self.q4() != None:
+                tokens.append(self.pos.ln)
+                tokens.append(self.q4())
+            self.next_char()
+            
+        elif ord(self.current_char) in opLogicos:
+            tokens.append(self.pos.ln)
+            tokens.append(self.q5())
+            self.next_char()
+
         elif self.current_char == 'EOF':
             print("Hello")
         
         else:
-            error_list.append(self.pos.ln)
-            error_list.append(self.q14())
+            errors.append(self.pos.ln)
+            errors.append(self.q14())
             self.next_char()
             
         #return tokens, None
@@ -169,7 +192,6 @@ class Lexer:
             else:
                 self.prev_char()
                 return Token(ART, token_str)
-
         elif self.current_char == '-':
             token_str = self.current_char
             self.next_char()
@@ -179,15 +201,44 @@ class Lexer:
             else:
                 self.prev_char()
                 return Token(ART, token_str)
-
         elif self.current_char == '/':
             return Token(ART, self.current_char)
-
         elif self.current_char == '*':
             return Token(ART, self.current_char)
-        
         else:
-            return q14()
-
+            return self.q14()
+        
+    def q3(self):#vai definir os delimitadores
+        if self.current_char == ';':
+            return Token(DEL, self.current_char)
+        elif self.current_char == ',':
+            return Token(DEL, self.current_char)
+        elif self.current_char == '.':
+            return Token(DEL, self.current_char)
+        elif self.current_char == '[':
+            return Token(DEL, self.current_char)
+        elif self.current_char == ']':
+           return Token(DEL, self.current_char)
+        elif self.current_char == '(':
+            return Token(DEL, self.current_char)
+        elif self.current_char == ')':
+            return Token(DEL, self.current_char)
+        elif self.current_char == '{':
+            if self.next_char() == '#':
+                return self.q4()#mudar o número quando for comentário de bloco
+            else:
+                self.prev_char()
+                return Token(DEL, self.current_char)
+        elif self.current_char == '}':
+            return Token(DEL, self.current_char)
+    
+    def q4(self):
+        if self.current_char ==  '%':
+            while self.current_char != '\n' and self.pos.indx != len(self.text):#enquanto ele não chegar ao final da linha e consequentemente do comentário, 
+                                                                                #ou no final do arquivo, caso seja um comentário no final do arquivo
+                                                                                #ele vai continuar lendo os caracteres até chegar o fim do comentário
+                self.next_char()
+        return None
+        
     def q14(self):#Erro de símbolo inválido
         return Token(SII, self.current_char)
