@@ -15,11 +15,17 @@ def run(text):
 # CONSTANTS
 ###
 DIGITS = '0123456789'
+LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 #unicode de cada linha da tabela
 opAritmeticos = [42, 43, 45, 47]
 delimitadores = [91, 93, 123, 125, 40, 41, 59, 44, 46]
 opLogicos = [38, 124, 33]
+opRelacionais = [60, 61, 62]
 delComentario = [37]
+reserved_words = ["algoritmo", "variaveis", "constantes", "registro",
+"funcao", "retorno", "vazio", "se", "senao", "enquanto",
+"para", "leia", "escreva", "inteiro", "real", "booleano", "char",
+"cadeia", "verdadeiro", "falso"]
 
 ###
 # ERRORS
@@ -59,6 +65,13 @@ CoMF = 'CoMF'
 OpMF = 'OpMF'
 CAD = 'CAD'
 
+''' def verificaLetra(caracter):
+    caracter = ord(caracter)
+    if(caracter >= 65 and caracter <= 90):
+        return True
+    elif(caracter >= 97 and caracter <= 122):
+        return True
+    return False '''
 
 class Token:
     def __init__(self, type_, value = None):
@@ -124,6 +137,13 @@ class Lexer:
         if self.current_char in ' \t\n':
             self.next_char()
         #
+        # IDENTIFICADORES
+        #
+        elif self.current_char in LETTERS:
+            tk_out_str = ""
+            tokens.append(self.pos.ln)
+            tokens.append(self.identificador())
+        #
         # DIGITOS
         #
         elif self.current_char in DIGITS:
@@ -152,6 +172,11 @@ class Lexer:
         elif ord(self.current_char) in opLogicos:
             tokens.append(self.pos.ln)
             tokens.append(self.q5())
+            self.next_char()
+        
+        elif ord(self.current_char) in opRelacionais:
+            tokens.append(self.pos.ln)
+            tokens.append(self.operadorRelacional())
             self.next_char()
 
         elif self.current_char == 'EOF':
@@ -239,6 +264,76 @@ class Lexer:
                                                                                 #ele vai continuar lendo os caracteres até chegar o fim do comentário
                 self.next_char()
         return None
+
+    def q5(self):
+        if self.current_char ==  '&':
+            lex = self.current_char
+            self.next_char()
+            if self.current_char == '&':
+               lex += self.current_char
+               return Token(LOG, lex)
+
+            return Token(OpMF, lex)
+        elif self.current_char ==  '|':
+            lex = self.current_char
+            self.next_char()
+            if self.current_char == '|':
+               lex += self.current_char
+               return Token(LOG, lex)
+
+            return Token(OpMF, lex)
+        elif self.current_char == '!':
+            lex = self.current_char
+            self.next_char()
+            if self.current_char == '=':
+                lex += self.current_char
+                return Token(REL, lex)
+            else:
+                self.prev_char()
+            
+            return Token(LOG, lex)
+        return None
+
+
+
+    def identificador(self):
+        lex = self.current_char
+        
+        self.next_char()
+        while self.current_char in LETTERS or self.current_char in DIGITS or self.current_char == '_':
+            lex += self.current_char
+            self.next_char()
+            if(self.current_char == None):
+                break
+
+
+        if(lex in reserved_words):
+            return Token(PRE, lex)
+        return Token(IDE, lex)
+
+    def operadorRelacional(self):
+        if self.current_char ==  '=':
+            lex = self.current_char
+            self.next_char()
+            if self.current_char == '=':
+               lex += self.current_char
+
+            return Token(REL, lex)
+        elif self.current_char ==  '>':
+            lex = self.current_char
+            self.next_char()
+            if self.current_char == '=':
+               lex += self.current_char
+
+            return Token(REL, lex)
+        elif self.current_char == '<':
+            lex = self.current_char
+            self.next_char()
+            if self.current_char == '=':
+               lex += self.current_char
+
+            return Token(REL, lex)
+
         
     def q14(self):#Erro de símbolo inválido
         return Token(SII, self.current_char)

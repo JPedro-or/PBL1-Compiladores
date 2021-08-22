@@ -1,6 +1,6 @@
-{}
-%something 
-[]/
-%something something
-/]]%something
+teste_ide123;
+x=10;
 
+se(teste>10){
+    x=11;
+}

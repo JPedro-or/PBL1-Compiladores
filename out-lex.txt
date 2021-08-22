@@ -1,8 +1,18 @@
-0 DEL: { 
-0 DEL: } 
-2 DEL: [ 
-2 DEL: ] 
-2 ART: / 
-4 ART: / 
-4 DEL: ] 
-4 DEL: ] 
+0 IDE: teste_ide123 
+0 DEL: ; 
+1 IDE: x 
+1 REL: = 
+1 NRO 
+1 DEL: ; 
+3 PRE: se 
+3 DEL: ( 
+3 IDE: teste 
+3 REL: > 
+3 NRO 
+3 DEL: ) 
+3 DEL: { 
+4 IDE: x 
+4 REL: = 
+4 NRO: 1 
+4 DEL: ; 
+5 DEL: } 
