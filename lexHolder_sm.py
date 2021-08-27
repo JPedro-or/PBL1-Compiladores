@@ -7,7 +7,7 @@ from typing import Counter
 
 def run(text):
     lexer = Lexer(text)
-    tokens, error = lexer.make_tokens()
+    tokens = lexer.make_tokens()
 
     return tokens
 
@@ -26,6 +26,7 @@ reserved_words = ["algoritmo", "variaveis", "constantes", "registro",
 "funcao", "retorno", "vazio", "se", "senao", "enquanto",
 "para", "leia", "escreva", "inteiro", "real", "booleano", "char",
 "cadeia", "verdadeiro", "falso"]
+simboloNaoIncluso = [34, 39]
 
 ###
 # ERRORS
@@ -110,7 +111,7 @@ class Position:#mantem o valor da linha e coluna
 class Lexer:
     def __init__(self, text):
         self.text = text
-        self.pos = Position(-1, 0, -1)
+        self.pos = Position(-1, 1, -1)
         self.current_char = None
         self.next_char()
     
@@ -127,7 +128,7 @@ class Lexer:
         errors = []
         while self.current_char != None:
             self.q0(tokens, errors)
-        return tokens, None   
+        return tokens   
     
     def q0(self, tokens, errors):#q0 vai ser o node inicial da máquina e vai chamar os outros nodes. 
                          #Cada node vai corresponder a uma classificação na tabela de expressão regular (ex. Operadores aritméticos é o node q2)
@@ -140,16 +141,17 @@ class Lexer:
         # IDENTIFICADORES
         #
         elif self.current_char in LETTERS:
-            tk_out_str = ""
             tokens.append(self.pos.ln)
-            tokens.append(self.identificador())
+            tk_out_str = self.identificador()
+            tokens.append(tk_out_str)
         #
         # DIGITOS
         #
         elif self.current_char in DIGITS:
             tk_out_str = ""
             tokens.append(self.pos.ln)
-            tokens.append(self.q1())
+            tk_out_str = self.q1()
+            tokens.append(tk_out_str)
         #
         # OPERADORES ARITMÉTICOS
         #
@@ -164,9 +166,8 @@ class Lexer:
             self.next_char()
         
         elif ord(self.current_char) in delComentario:
-            if self.q4() != None:
-                tokens.append(self.pos.ln)
-                tokens.append(self.q4())
+            tokens.append(self.pos.ln)
+            tokens.append(self.q4(''))
             self.next_char()
             
         elif ord(self.current_char) in opLogicos:
@@ -179,8 +180,12 @@ class Lexer:
             tokens.append(self.operadorRelacional())
             self.next_char()
 
-        elif self.current_char == 'EOF':
-            print("Hello")
+        elif ord(self.current_char) >= 32 and ord(self.current_char) <= 255:
+            tokens.append(self.pos.ln)
+            tokens.append(self.simbolos())
+            self.next_char()
+
+
         
         else:
             errors.append(self.pos.ln)
@@ -192,7 +197,7 @@ class Lexer:
     def q1(self):# Vai definir os tokens de digitos, ints e pontos flutuantes
         num_str = ''
         dot_count = 0
-
+        
         while self.current_char != None and self.current_char in DIGITS + '.':
             if self.current_char == '.':
                 if dot_count == 1: break
@@ -203,9 +208,9 @@ class Lexer:
             self.next_char()
         
         if dot_count == 0:
-            return Token(NRO, int(num_str))
+            return Token(NRO, num_str)
         else:
-            return Token(NRO, float(num_str))
+            return Token(NRO, num_str)
 
     def q2(self):#vai definir os operadores aritméticos
         if self.current_char == '+':
@@ -246,24 +251,45 @@ class Lexer:
            return Token(DEL, self.current_char)
         elif self.current_char == '(':
             return Token(DEL, self.current_char)
-        elif self.current_char == ')':
+        elif self.current_char   == ')':
             return Token(DEL, self.current_char)
         elif self.current_char == '{':
-            if self.next_char() == '#':
-                return self.q4()#mudar o número quando for comentário de bloco
-            else:
-                self.prev_char()
-                return Token(DEL, self.current_char)
+            comment_str = self.current_char
+            self.next_char()
+            if self.current_char == '#':
+                return self.q4(comment_str)
+            self.prev_char()
+            return Token(DEL, self.current_char)
         elif self.current_char == '}':
             return Token(DEL, self.current_char)
     
-    def q4(self):
+    def q4(self, comment_str):
         if self.current_char ==  '%':
             while self.current_char != '\n' and self.pos.indx != len(self.text):#enquanto ele não chegar ao final da linha e consequentemente do comentário, 
-                                                                                #ou no final do arquivo, caso seja um comentário no final do arquivo
-                                                                                #ele vai continuar lendo os caracteres até chegar o fim do comentário
                 self.next_char()
-        return None
+            return 'comentario de linha'                                               #ou no final do arquivo, caso seja um comentário no final do arquivo
+                                                                                #ele vai continuar lendo os caracteres até chegar o fim do comentário
+        elif self.current_char == '#':
+            comment_str += self.current_char
+            return self.comment_loop_i(comment_str)
+
+    def comment_loop_i(self, comment_str):
+       while self.current_char != None:
+           self.next_char()
+           if self.current_char != None and self.current_char == "#":
+               comment_str += self.current_char
+               return self.comment_loop_ii(comment_str)
+           elif self.current_char != None:
+                comment_str += self.current_char
+       return Token(CoMF, comment_str)
+    
+    def comment_loop_ii(self, comment_str):
+        self.next_char()
+        if self.current_char != None and self.current_char == "}":
+            return 'comentario de bloco'
+        elif self.current_char != None: 
+            comment_str += self.current_char
+        return self.comment_loop_i(comment_str)
 
     def q5(self):
         if self.current_char ==  '&':
@@ -272,26 +298,27 @@ class Lexer:
             if self.current_char == '&':
                lex += self.current_char
                return Token(LOG, lex)
-
+            self.prev_char()
             return Token(OpMF, lex)
+
         elif self.current_char ==  '|':
             lex = self.current_char
             self.next_char()
             if self.current_char == '|':
                lex += self.current_char
                return Token(LOG, lex)
-
+            self.prev_char()
             return Token(OpMF, lex)
+
         elif self.current_char == '!':
             lex = self.current_char
             self.next_char()
             if self.current_char == '=':
                 lex += self.current_char
                 return Token(REL, lex)
-            else:
-                self.prev_char()
-            
+            self.prev_char()
             return Token(LOG, lex)
+
         return None
 
 
@@ -317,23 +344,35 @@ class Lexer:
             self.next_char()
             if self.current_char == '=':
                lex += self.current_char
+               return Token(REL, lex)
+            self.prev_char()
+            return Token(REL, self.current_char)
 
-            return Token(REL, lex)
         elif self.current_char ==  '>':
             lex = self.current_char
             self.next_char()
             if self.current_char == '=':
                lex += self.current_char
+               return Token(REL, lex)
+            self.prev_char()
+            return Token(REL, self.current_char)
 
-            return Token(REL, lex)
         elif self.current_char == '<':
             lex = self.current_char
             self.next_char()
             if self.current_char == '=':
                lex += self.current_char
+               return Token(REL, lex)
+            self.prev_char()
+            return Token(REL, self.current_char)
 
-            return Token(REL, lex)
+            
 
+    def simbolos(self):
+        if ord(self.current_char) >= 32 and ord(self.current_char) <= 126 and ord(self.current_char) not in simboloNaoIncluso:
+            return Token(SIB, self.current_char)
+        else:
+            return Token(SII, self.current_char)
         
     def q14(self):#Erro de símbolo inválido
         return Token(SII, self.current_char)

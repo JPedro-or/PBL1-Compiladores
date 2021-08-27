@@ -1,6 +1,10 @@
-teste_ide123;
-x=10;
-
-se(teste>10){
-    x=11;
+%comentario
+3.5 > -2;
+idnetificador;
+inteiro = 2;
+enquanto i < 3{
+    i++
+}
+se (3 > 2){#comentario#}{
+    y = 3.2;
 }
