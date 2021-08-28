@@ -1,10 +1,10 @@
-%comentario
+
 3.5 > -2;
 idnetificador;
+%comentario
+@
 inteiro = 2;
 enquanto i < 3{
     i++
 }
-se (3 > 2){#comentario#}{
-    y = 3.2;
-}
+{#comentari# }

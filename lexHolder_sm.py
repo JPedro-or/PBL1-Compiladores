@@ -7,9 +7,9 @@ from typing import Counter
 
 def run(text):
     lexer = Lexer(text)
-    tokens = lexer.make_tokens()
+    tokens, errors = lexer.make_tokens()
 
-    return tokens
+    return tokens, errors
 
 ###
 # CONSTANTS
@@ -128,7 +128,7 @@ class Lexer:
         errors = []
         while self.current_char != None:
             self.q0(tokens, errors)
-        return tokens   
+        return tokens, errors   
     
     def q0(self, tokens, errors):#q0 vai ser o node inicial da máquina e vai chamar os outros nodes. 
                          #Cada node vai corresponder a uma classificação na tabela de expressão regular (ex. Operadores aritméticos é o node q2)
@@ -161,18 +161,33 @@ class Lexer:
             self.next_char()
         
         elif ord(self.current_char) in delimitadores:
-            tokens.append(self.pos.ln)
-            tokens.append(self.q3())
+            tok_list, er_list = self.q3()
+            if tok_list != None:
+                tokens.append(self.pos.ln)
+                tokens.append(tok_list)
+            elif er_list != None:
+                errors.append(self.pos.ln)
+                errors.append(er_list)
             self.next_char()
         
         elif ord(self.current_char) in delComentario:
-            tokens.append(self.pos.ln)
-            tokens.append(self.q4(''))
+            tok_list, er_list = self.q4('')
+            if tok_list != None:
+                tokens.append(self.pos.ln)
+                tokens.append(tok_list)
+            elif er_list != None:
+                errors.append(self.pos.ln)
+                errors.append(er_list)
             self.next_char()
             
         elif ord(self.current_char) in opLogicos:
-            tokens.append(self.pos.ln)
-            tokens.append(self.q5())
+            tok_list, er_list = self.q5()
+            if tok_list != None:
+                tokens.append(self.pos.ln)
+                tokens.append(tok_list)
+            elif er_list != None:
+                errors.append(self.pos.ln)
+                errors.append(er_list)
             self.next_char()
         
         elif ord(self.current_char) in opRelacionais:
@@ -181,8 +196,8 @@ class Lexer:
             self.next_char()
 
         elif ord(self.current_char) >= 32 and ord(self.current_char) <= 255:
-            tokens.append(self.pos.ln)
-            tokens.append(self.simbolos())
+            errors.append(self.pos.ln)
+            errors.append(self.simbolos())
             self.next_char()
 
 
@@ -240,34 +255,35 @@ class Lexer:
         
     def q3(self):#vai definir os delimitadores
         if self.current_char == ';':
-            return Token(DEL, self.current_char)
+            return Token(DEL, self.current_char), None
         elif self.current_char == ',':
-            return Token(DEL, self.current_char)
+            return Token(DEL, self.current_char), None
         elif self.current_char == '.':
-            return Token(DEL, self.current_char)
+            return Token(DEL, self.current_char), None
         elif self.current_char == '[':
-            return Token(DEL, self.current_char)
+            return Token(DEL, self.current_char), None
         elif self.current_char == ']':
-           return Token(DEL, self.current_char)
+           return Token(DEL, self.current_char), None
         elif self.current_char == '(':
-            return Token(DEL, self.current_char)
+            return Token(DEL, self.current_char), None
         elif self.current_char   == ')':
-            return Token(DEL, self.current_char)
+            return Token(DEL, self.current_char), None
         elif self.current_char == '{':
             comment_str = self.current_char
             self.next_char()
             if self.current_char == '#':
                 return self.q4(comment_str)
             self.prev_char()
-            return Token(DEL, self.current_char)
+            return Token(DEL, self.current_char), None
         elif self.current_char == '}':
-            return Token(DEL, self.current_char)
+            return Token(DEL, self.current_char), None
     
     def q4(self, comment_str):
         if self.current_char ==  '%':
             while self.current_char != '\n' and self.pos.indx != len(self.text):#enquanto ele não chegar ao final da linha e consequentemente do comentário, 
                 self.next_char()
-            return 'comentario de linha'                                               #ou no final do arquivo, caso seja um comentário no final do arquivo
+            ret_str = 'comentario de linha'
+            return ret_str, None                                            #ou no final do arquivo, caso seja um comentário no final do arquivo
                                                                                 #ele vai continuar lendo os caracteres até chegar o fim do comentário
         elif self.current_char == '#':
             comment_str += self.current_char
@@ -281,12 +297,14 @@ class Lexer:
                return self.comment_loop_ii(comment_str)
            elif self.current_char != None:
                 comment_str += self.current_char
-       return Token(CoMF, comment_str)
+       comment_str.replace(" ", "")
+       return None, Token(CoMF, comment_str)
     
     def comment_loop_ii(self, comment_str):
         self.next_char()
         if self.current_char != None and self.current_char == "}":
-            return 'comentario de bloco'
+            ret_str = 'comentario de bloco'
+            return ret_str, None
         elif self.current_char != None: 
             comment_str += self.current_char
         return self.comment_loop_i(comment_str)
@@ -297,29 +315,29 @@ class Lexer:
             self.next_char()
             if self.current_char == '&':
                lex += self.current_char
-               return Token(LOG, lex)
+               return Token(LOG, lex), None
             self.prev_char()
-            return Token(OpMF, lex)
+            return None, Token(OpMF, lex)
 
         elif self.current_char ==  '|':
             lex = self.current_char
             self.next_char()
             if self.current_char == '|':
                lex += self.current_char
-               return Token(LOG, lex)
+               return Token(LOG, lex), None
             self.prev_char()
-            return Token(OpMF, lex)
+            return None, Token(OpMF, lex)
 
         elif self.current_char == '!':
             lex = self.current_char
             self.next_char()
             if self.current_char == '=':
                 lex += self.current_char
-                return Token(REL, lex)
+                return Token(REL, lex), None
             self.prev_char()
-            return Token(LOG, lex)
+            return Token(LOG, lex), None
 
-        return None
+        return None, None
 
 
 
