@@ -1,23 +1,22 @@
-2 NRO: 3.5 
+2 NMF: 3.5  
 2 REL: > 
 2 ART: - 
-2 NRO: 2 
-2 DEL: ; 
-3 IDE: idnetificador 
-3 DEL: ; 
+2 NMF: 2;
+idnetificador;
+ 
 4 comentario de linha 
 6 PRE: inteiro 
 6 REL: = 
-6 NRO: 2 
-6 DEL: ; 
-7 PRE: enquanto 
-7 IDE: i 
+6 NMF: 2;
+enquanto i  
 7 REL: < 
-7 NRO: 3 
-7 DEL: { 
-8 IDE: i 
+7 NMF: 3{
+    i 
 8 ART: ++ 
 9 DEL: } 
+10 CAD: "something\"" 
+10 IDE: some 
+11 CAR: 'a' 
 
 5 SIB: @ 
-10 CoMF: {#comentari# } 
+14 CoMF: {#comentari# } 

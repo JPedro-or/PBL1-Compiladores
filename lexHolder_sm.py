@@ -413,7 +413,7 @@ class Lexer:
             if(self.current_char == '"' and lex[-2] != "\\"):
                 break
 
-            elif(self.current_char not in LETTERS and self.current_char not in DIGITS and not self.isSimbol()):
+            elif(not self.is_valid_cad_car()):
                 erro = True
             # print(lex)
             
@@ -438,7 +438,7 @@ class Lexer:
             if(self.current_char == "'" and lex[-2] != "\\"):
                 break
 
-            elif(self.current_char not in LETTERS and self.current_char not in DIGITS and not self.isSimbol()):
+            elif(not self.is_valid_car()):
                 count = 3
             # print(lex)
             
@@ -459,6 +459,16 @@ class Lexer:
 
     def isSimbol(self):
         if ord(self.current_char) >= 32 and ord(self.current_char) <= 126 and ord(self.current_char) not in simboloNaoIncluso:
+            return True
+        return False
+
+    def is_valid_cad_car(self):
+        if ord(self.current_char) >= 32 and ord(self.current_char) <= 126 and ord(self.current_char) != 39:
+            return True
+        return False
+
+    def is_valid_car(self):
+        if ord(self.current_char) >= 32 and ord(self.current_char) <= 126 and ord(self.current_char) != 34:
             return True
         return False
 
