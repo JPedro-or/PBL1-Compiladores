@@ -195,6 +195,16 @@ class Lexer:
             tokens.append(self.operadorRelacional())
             self.next_char()
 
+        elif self.current_char == '"':
+            tokens.append(self.pos.ln)
+            tokens.append(self.cadeiaCaracteres())
+            self.next_char()
+        
+        elif self.current_char == "'":
+            tokens.append(self.pos.ln)
+            tokens.append(self.caractere())
+            self.next_char()
+
         elif ord(self.current_char) >= 32 and ord(self.current_char) <= 255:
             errors.append(self.pos.ln)
             errors.append(self.simbolos())
@@ -210,22 +220,27 @@ class Lexer:
         #return tokens, None
 
     def q1(self):# Vai definir os tokens de digitos, ints e pontos flutuantes
-        num_str = ''
+        num_str = self.current_char
+        self.next_char()
         dot_count = 0
+        num_mf = False
+        # points = 0
         
-        while self.current_char != None and self.current_char in DIGITS + '.':
+        while self.current_char != None and not self.isOperator() and self.current_char not in delimitadores and self.current_char != "%":
             if self.current_char == '.':
-                if dot_count == 1: break
                 dot_count +=1
-                num_str += '.'
-            else: 
+                if dot_count > 1: 
+                    num_mf = True
+                num_str += self.current_char
+            else:
+                if self.current_char not in DIGITS:
+                    num_mf = True
                 num_str += self.current_char
             self.next_char()
         
-        if dot_count == 0:
-            return Token(NRO, num_str)
-        else:
-            return Token(NRO, num_str)
+        if num_mf:
+            return Token(NMF, num_str)
+        return Token(NRO, num_str)
 
     def q2(self):#vai definir os operadores aritméticos
         if self.current_char == '+':
@@ -384,13 +399,70 @@ class Lexer:
             self.prev_char()
             return Token(REL, self.current_char)
 
+    def cadeiaCaracteres(self):
+        lex = self.current_char
+        erro = False
+        while True:
+            self.next_char()
+            if self.current_char == "\n" or self.current_char == None:
+                erro = True
+                break
+            else:
+                lex += self.current_char
+                
+            if(self.current_char == '"' and lex[-2] != "\\"):
+                break
+
+            elif(self.current_char not in LETTERS and self.current_char not in DIGITS and not self.isSimbol()):
+                erro = True
+            # print(lex)
             
+        if erro:
+            return Token(CMF, lex)
+        else:
+            return Token(CAD, lex)
+
+    def caractere(self):
+        lex = self.current_char
+        count = 0
+
+        while True:
+            self.next_char()
+            if self.current_char == "\n" or self.current_char == None:
+                count = 3
+                break
+            else:
+                lex += self.current_char
+                count += 1
+                
+            if(self.current_char == "'" and lex[-2] != "\\"):
+                break
+
+            elif(self.current_char not in LETTERS and self.current_char not in DIGITS and not self.isSimbol()):
+                count = 3
+            # print(lex)
+            
+        if count > 2:
+            return Token(CaMF, lex)
+        else:
+            return Token(CAR, lex)
+
 
     def simbolos(self):
-        if ord(self.current_char) >= 32 and ord(self.current_char) <= 126 and ord(self.current_char) not in simboloNaoIncluso:
+        if self.isSimbol():
             return Token(SIB, self.current_char)
         else:
             return Token(SII, self.current_char)
         
     def q14(self):#Erro de símbolo inválido
         return Token(SII, self.current_char)
+
+    def isSimbol(self):
+        if ord(self.current_char) >= 32 and ord(self.current_char) <= 126 and ord(self.current_char) not in simboloNaoIncluso:
+            return True
+        return False
+
+    def isOperator(self):
+        if ord(self.current_char) in opAritmeticos or ord(self.current_char) in opLogicos or ord(self.current_char) in opRelacionais:
+            return True
+        return False
