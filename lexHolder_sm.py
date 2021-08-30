@@ -249,7 +249,10 @@ class Lexer:
             if dot_count == 0:
                 return Token(NRO, num_str), None
             elif dot_count == 1:
-                return None, Token(NMF, num_str)
+                if num_str[-1] == '.':
+                    return None, Token(NMF, num_str)
+                else:
+                    return Token(NRO, num_str), None
 
         if self.current_char == None:
             if dot_count == 1:
