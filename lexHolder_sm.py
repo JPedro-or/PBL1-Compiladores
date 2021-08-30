@@ -148,10 +148,13 @@ class Lexer:
         # DIGITOS
         #
         elif self.current_char in DIGITS:
-            tk_out_str = ""
-            tokens.append(self.pos.ln)
-            tk_out_str = self.q1()
-            tokens.append(tk_out_str)
+            tok_list, er_list = self.q1()
+            if tok_list != None:
+                tokens.append(self.pos.ln)
+                tokens.append(tok_list)
+            elif er_list != None:
+                errors.append(self.pos.ln)
+                errors.append(er_list)
         #
         # OPERADORES ARITMÉTICOS
         #
@@ -196,13 +199,23 @@ class Lexer:
             self.next_char()
 
         elif self.current_char == '"':
-            tokens.append(self.pos.ln)
-            tokens.append(self.cadeiaCaracteres())
+            tok_list, er_list = self.cadeiaCaracteres()
+            if tok_list != None:
+                tokens.append(self.pos.ln)
+                tokens.append(tok_list)
+            elif er_list != None:
+                errors.append(self.pos.ln)
+                errors.append(er_list)
             self.next_char()
         
         elif self.current_char == "'":
-            tokens.append(self.pos.ln)
-            tokens.append(self.caractere())
+            tok_list, er_list = self.caractere()
+            if tok_list != None:
+                tokens.append(self.pos.ln)
+                tokens.append(tok_list)
+            elif er_list != None:
+                errors.append(self.pos.ln)
+                errors.append(er_list)
             self.next_char()
 
         elif ord(self.current_char) >= 32 and ord(self.current_char) <= 255:
@@ -220,27 +233,40 @@ class Lexer:
         #return tokens, None
 
     def q1(self):# Vai definir os tokens de digitos, ints e pontos flutuantes
-        num_str = self.current_char
-        self.next_char()
+        num_str = ''
         dot_count = 0
-        num_mf = False
-        # points = 0
-        
-        while self.current_char != None and not self.isOperator() and self.current_char not in delimitadores and self.current_char != "%":
+
+        while self.current_char != None and self.current_char in DIGITS + '.':
             if self.current_char == '.':
+                if dot_count == 1: return self.num_loop_i(num_str)
                 dot_count +=1
-                if dot_count > 1: 
-                    num_mf = True
-                num_str += self.current_char
-            else:
-                if self.current_char not in DIGITS:
-                    num_mf = True
+                num_str += '.'
+            else: 
                 num_str += self.current_char
             self.next_char()
+
+        if self.current_char != None and self.is_valid_end_of_num():# se ele não for letra nem número nem ponto
+            if dot_count == 0:
+                return Token(NRO, num_str), None
+            elif dot_count == 1:
+                return None, Token(NMF, num_str)
+
+        if self.current_char == None:
+            if dot_count == 1:
+                return None, Token(NMF, num_str)
+            elif dot_count == 0:
+                return Token(NRO, num_str), None
         
-        if num_mf:
-            return Token(NMF, num_str)
-        return Token(NRO, num_str)
+        else:
+            return self.num_loop_i(num_str)
+
+    def num_loop_i(self, num_str):
+        while self.current_char != None and not self.is_valid_end_of_num() and self.current_char != '\n':
+            num_str += self.current_char
+            self.next_char()
+        return None, Token(NMF, num_str)
+        
+        
 
     def q2(self):#vai definir os operadores aritméticos
         if self.current_char == '+':
@@ -418,9 +444,9 @@ class Lexer:
             # print(lex)
             
         if erro:
-            return Token(CMF, lex)
+            return None, Token(CMF, lex)
         else:
-            return Token(CAD, lex)
+            return Token(CAD, lex), None
 
     def caractere(self):
         lex = self.current_char
@@ -443,9 +469,9 @@ class Lexer:
             # print(lex)
             
         if count > 2:
-            return Token(CaMF, lex)
+            return None, Token(CaMF, lex)
         else:
-            return Token(CAR, lex)
+            return Token(CAR, lex), None
 
 
     def simbolos(self):
@@ -459,6 +485,11 @@ class Lexer:
 
     def isSimbol(self):
         if ord(self.current_char) >= 32 and ord(self.current_char) <= 126 and ord(self.current_char) not in simboloNaoIncluso:
+            return True
+        return False
+
+    def is_valid_end_of_num(self):
+        if self.current_char not in LETTERS and self.current_char not in DIGITS and self.current_char != ".":
             return True
         return False
 

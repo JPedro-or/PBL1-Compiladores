@@ -1,22 +1,44 @@
-2 NMF: 3.5  
-2 REL: > 
+1 IDE: inteir 
+1 IDE: a_ 
+1 DEL: ; 
+2 PRE: real 
+2 IDE: b 
+2 REL: = 
 2 ART: - 
-2 NMF: 2;
-idnetificador;
- 
-4 comentario de linha 
-6 PRE: inteiro 
-6 REL: = 
-6 NMF: 2;
-enquanto i  
-7 REL: < 
-7 NMF: 3{
-    i 
-8 ART: ++ 
-9 DEL: } 
-10 CAD: "something\"" 
-10 IDE: some 
-11 CAR: 'a' 
+2 DEL: ; 
+4 PRE: se 
+4 DEL: ( 
+4 IDE: a_ 
+4 IDE: b 
+4 DEL: ) 
+4 DEL: ; 
+5 IDE: escrevva 
+5 DEL: ( 
+5 CAD: "Ta certo, confia" 
+5 DEL: ) 
+6 IDE: sena 
+6 IDE: o 
+6 DEL: ( 
+6 IDE: a_ 
+6 ART: - 
+6 IDE: b 
+6 DEL: ) 
+7 IDE: b 
+7 REL: = 
+7 ART: - 
+8 IDE: a_ 
+8 REL: = 
+8 DEL: . 
+8 NRO: 8 
 
-5 SIB: @ 
-14 CoMF: {#comentari# } 
+2 SIB: _ 
+2 NMF: 3.4 
+4 OpMF: & 
+4 SIB: _ 
+6 OpMF: | 
+7 SIB: _ 
+7 NMF: 3.4.4.4 
+7 SIB: $ 
+7 NMF: 4. 
+8 SIB: $ 
+8 NMF: 858.8aaaa 
