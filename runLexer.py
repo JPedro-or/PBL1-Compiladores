@@ -36,7 +36,7 @@ def read_write_file(file_value):
             with open('output\saida' + str(file_value) + '.txt', 'a') as file:
                 file.write(str(errors[i]))
                 file.write(' ')
-    print(result)
+    #print(result)
 
 input_list = os.listdir('input')
 output_list = os.listdir('output')

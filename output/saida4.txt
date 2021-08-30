@@ -40,9 +40,4 @@
 20 CMF: " Serio? 
 21 CMF: " 
 22 CaMF: 'aa' 
-29 CoMF: {# 
-por ultimo b:
-
-
-b = vazio
-escreva(b) 
+24 CoMF: {#  por ultimo b:   b = vazio escreva(b) 

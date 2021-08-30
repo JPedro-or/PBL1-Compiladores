@@ -3,6 +3,8 @@
 # RUN
 ###
 from typing import Counter
+import os
+import sys
 
 
 def run(text):
@@ -164,13 +166,21 @@ class Lexer:
             self.next_char()
         
         elif ord(self.current_char) in delimitadores:
-            tok_list, er_list = self.q3()
+            tok_list, er_list, begin_line = self.q3()
             if tok_list != None:
-                tokens.append(self.pos.ln)
-                tokens.append(tok_list)
+                if begin_line != None:
+                    tokens.append(begin_line)
+                    tokens.append(tok_list)
+                elif begin_line == None:
+                    tokens.append(self.pos.ln)
+                    tokens.append(tok_list)
             elif er_list != None:
-                errors.append(self.pos.ln)
-                errors.append(er_list)
+                if begin_line != None:
+                    errors.append(begin_line)
+                    errors.append(er_list)
+                elif begin_line == None:
+                    errors.append(self.pos.ln)
+                    errors.append(er_list)
             self.next_char()
         
         elif ord(self.current_char) in delComentario:
@@ -299,28 +309,28 @@ class Lexer:
         
     def q3(self):#vai definir os delimitadores
         if self.current_char == ';':
-            return Token(DEL, self.current_char), None
+            return Token(DEL, self.current_char), None, None
         elif self.current_char == ',':
-            return Token(DEL, self.current_char), None
+            return Token(DEL, self.current_char), None, None
         elif self.current_char == '.':
-            return Token(DEL, self.current_char), None
+            return Token(DEL, self.current_char), None, None
         elif self.current_char == '[':
-            return Token(DEL, self.current_char), None
+            return Token(DEL, self.current_char), None, None
         elif self.current_char == ']':
-           return Token(DEL, self.current_char), None
+           return Token(DEL, self.current_char), None, None
         elif self.current_char == '(':
-            return Token(DEL, self.current_char), None
+            return Token(DEL, self.current_char), None, None
         elif self.current_char   == ')':
-            return Token(DEL, self.current_char), None
+            return Token(DEL, self.current_char), None, None
         elif self.current_char == '{':
             comment_str = self.current_char
             self.next_char()
             if self.current_char == '#':
                 return self.q4(comment_str)
             self.prev_char()
-            return Token(DEL, self.current_char), None
+            return Token(DEL, self.current_char), None, None
         elif self.current_char == '}':
-            return Token(DEL, self.current_char), None
+            return Token(DEL, self.current_char), None, None
     
     def q4(self, comment_str):
         if self.current_char ==  '%':
@@ -330,28 +340,34 @@ class Lexer:
             return ret_str, None                                            #ou no final do arquivo, caso seja um comentário no final do arquivo
                                                                                 #ele vai continuar lendo os caracteres até chegar o fim do comentário
         elif self.current_char == '#':
+            begin_line = self.pos.ln
             comment_str += self.current_char
-            return self.comment_loop_i(comment_str)
+            return self.comment_loop_i(comment_str, begin_line)
 
-    def comment_loop_i(self, comment_str):
+    def comment_loop_i(self, comment_str, begin_line):
        while self.current_char != None:
            self.next_char()
            if self.current_char != None and self.current_char == "#":
                comment_str += self.current_char
-               return self.comment_loop_ii(comment_str)
+               return self.comment_loop_ii(comment_str, begin_line)
            elif self.current_char != None:
-                comment_str += self.current_char
-       comment_str.replace(" ", "")
-       return None, Token(CoMF, comment_str)
+                if self.current_char == '\n':
+                    comment_str += ' '
+                else:
+                    comment_str += self.current_char
+       return None, Token(CoMF, comment_str), begin_line
     
-    def comment_loop_ii(self, comment_str):
+    def comment_loop_ii(self, comment_str, begin_line):
         self.next_char()
         if self.current_char != None and self.current_char == "}":
             ret_str = 'comentario de bloco'
-            return ret_str, None
+            return ret_str, None, begin_line
         elif self.current_char != None: 
-            comment_str += self.current_char
-        return self.comment_loop_i(comment_str)
+            if self.current_char == '\n':
+                comment_str += ' '
+            else:
+                comment_str += self.current_char
+        return self.comment_loop_i(comment_str, begin_line)
 
     def q5(self):
         if self.current_char ==  '&':
