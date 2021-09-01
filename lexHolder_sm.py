@@ -32,7 +32,7 @@ reserved_words = ["algoritmo", "variaveis", "constantes", "registro",
 "para", "leia", "escreva", "inteiro", "real", "booleano", "char",
 "cadeia", "verdadeiro", "falso"]
 simboloNaoIncluso = [34, 39]
-contraBarraValido = [92, 110, 116, 39]
+contraBarraValido = [92, 39]
 
 ###
 # ERRORS
@@ -213,7 +213,7 @@ class Lexer:
             self.next_char()
 
         elif self.current_char == '"':
-            tok_list, er_list = self.cadeiaCaracteres()
+            tok_list, er_list = self.cadeiaCaracteres('')
             if tok_list != None:
                 tokens.append(self.pos.ln)
                 tokens.append(tok_list)
@@ -448,25 +448,42 @@ class Lexer:
             self.prev_char()
             return Token(REL, self.current_char)
 
-    def cadeiaCaracteres(self):
-        lex = self.current_char
-        erro = False
-        while True:
-            self.next_char()
-            if self.current_char == "\n" or self.current_char == None:
-                erro = True
-                break
+    def cadeiaCaracteres(self, lex):
+        lex += self.current_char
+        self.next_char()
+        while self.current_char != None and self.current_char != '\n':
+            if self.current_char == '"': return self.cadCarIV(lex)
+            elif self.current_char == '\\': return self.cadCarII(lex)
             else:
                 lex += self.current_char
-                
-            if(self.current_char == '"' and lex[-2] != "\\" or self.current_char == '"' and lex[-2] == '\\' and lex[-3] == '\\'):
-                break
+                self.next_char()
+        return None, Token(CMF, lex)
+    
+    def cadCarII(self, lex):
+        lex += self.current_char
+        self.next_char()
+        if self.current_char != None and self.current_char != '\n':
+            if self.current_char == '"': return self.cadCarIII(lex)
+            else: return self.cadeiaCaracteres(lex)
+        return None, Token(CMF, lex)
 
-            elif(not self.is_valid_cad_car()):
-                erro = True
-            # print(lex)
-            
-        if erro:
+    def cadCarIII(self, lex):
+        lex += self.current_char
+        self.next_char()
+        while self.current_char != None and self.current_char != '\n':
+            if self.current_char == '\\': return self.cadCarII(lex)
+            elif self.current_char == '"': return self.cadCarIV(lex)
+            else:
+                lex += self.current_char
+                self.next_char()
+        return None, Token(CMF, lex)
+
+    def cadCarIV(self, lex):
+        lex += self.current_char
+        erro = False
+        for i in range(len(lex)):
+            if not self.is_valid_cad_car_input(lex[i]): erro = True
+        if erro == True:
             return None, Token(CMF, lex)
         else:
             return Token(CAD, lex), None
@@ -530,6 +547,11 @@ class Lexer:
 
     def is_valid_cad_car(self):
         if ord(self.current_char) >= 32 and ord(self.current_char) <= 126 and ord(self.current_char) != 39:
+            return True
+        return False
+    
+    def is_valid_cad_car_input(self, i):
+        if ord(i) >= 32 and ord(i) <= 126 and ord(i) != 39:
             return True
         return False
 

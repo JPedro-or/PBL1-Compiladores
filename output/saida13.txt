@@ -30,6 +30,7 @@
 12 REL = 
 13 IDE m 
 13 REL = 
+13 CAD "\\\\\\" 
 14 IDE n 
 14 REL = 
 15 IDE o 
@@ -46,7 +47,6 @@
 18 CAD "\\n" 
 19 IDE s 
 19 REL = 
-19 CAR '\n' 
 
 2 CMF "\'" 
 4 CMF "\" 
@@ -56,5 +56,5 @@
 10 CaMF ' 
 11 CaMF '"' 
 12 CaMF '\' 
-13 CMF "\\\\\\" 
 14 CMF "\\\\\" 
+19 CaMF '\n' 
