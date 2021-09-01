@@ -1,10 +1,28 @@
-inteiro a = leia("Coloque um inteiro:");
-se(a<=9){
-    escreva("Isso eh uma unidade");
-} senao se(a<100){
-    escreva("Isso eh uma dezena");
-} senao se(a<=999){
-    escreva("Isso eh uma centena");
-} senao{
-    escreva("Isso eh acima de centena");
+Variaveis{
+    inteiro a_2;
+	inteiro b1_;
+	real c;
+	}
+
+% funcao de somar
+funcao vazio soma (inteiro e, inteiro f){
+	c = e + f;
+	escreva(c);
+	}
+
+{#
+Algoritmo de exemplo
+aa, a2, a_, a_a, a_2
+#}
+algoritmo{
+	a = verdadeiro;
+	b = 2
+	soma(a,b)
+	soma(a_2, b1_);
+	if(c > 2.2){
+		escreva("Esse numero e maior");
+	}
+	else {
+		escreva("Esse numero e menor");
+	}
 }

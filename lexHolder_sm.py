@@ -11,6 +11,9 @@ def run(text):
     lexer = Lexer(text)
     tokens, errors = lexer.make_tokens()
 
+    if len(errors) == 0:
+        errors = ['SUCESSO!']
+
     return tokens, errors
 
 ###
@@ -29,6 +32,7 @@ reserved_words = ["algoritmo", "variaveis", "constantes", "registro",
 "para", "leia", "escreva", "inteiro", "real", "booleano", "char",
 "cadeia", "verdadeiro", "falso"]
 simboloNaoIncluso = [34, 39]
+contraBarraValido = [92, 110, 116, 39]
 
 ###
 # ERRORS
@@ -82,7 +86,7 @@ class Token:
         self.value = value
     
     def __repr__(self):
-        if self.value: return f'{self.type}: {self.value}'
+        if self.value: return f'{self.type} {self.value}'
         return f'{self.type}'
 
 class Position:#mantem o valor da linha e coluna
@@ -455,7 +459,7 @@ class Lexer:
             else:
                 lex += self.current_char
                 
-            if(self.current_char == '"' and lex[-2] != "\\"):
+            if(self.current_char == '"' and lex[-2] != "\\" or self.current_char == '"' and lex[-2] == '\\' and lex[-3] == '\\'):
                 break
 
             elif(not self.is_valid_cad_car()):
@@ -470,27 +474,39 @@ class Lexer:
     def caractere(self):
         lex = self.current_char
         count = 0
+        erro = False
+        is_slash = False
 
         while True:
             self.next_char()
             if self.current_char == "\n" or self.current_char == None:
-                count = 3
+                count = 4
                 break
             else:
                 lex += self.current_char
                 count += 1
                 
-            if(self.current_char == "'" and lex[-2] != "\\"):
+            if(self.current_char == "'" and lex[-2] != "\\" or self.current_char ==  "'" and lex[-2] == '\\' and lex[-3] == '\\'):
+                is_slash = True
                 break
 
             elif(not self.is_valid_car()):
-                count = 3
+                erro = True
+                count = 4
             # print(lex)
-            
-        if count > 2:
-            return None, Token(CaMF, lex)
-        else:
-            return Token(CAR, lex), None
+        if count <= 2:
+            if erro == True:
+                return None, Token(CaMF, lex)
+            else:
+                return Token(CAR, lex), None
+        elif count <=3:
+            if is_slash == True:
+                if ord(lex[-2]) in contraBarraValido:
+                    return Token(CAR, lex), None
+                else: return None, Token(CaMF, lex)
+            else:
+                return None, Token(CaMF, lex)
+        else: return None, Token(CaMF, lex)
 
 
     def simbolos(self):

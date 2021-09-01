@@ -10,6 +10,7 @@ def read_write_file(file_value):
 
     re_size = len(result)
     er_size = len(errors)
+
     open('output\saida' + str(file_value) + '.txt', 'w').close()#limpa o arquivo de saída para o novo output
     count = -1
     for i in range(re_size):
@@ -41,6 +42,8 @@ def read_write_file(file_value):
 input_list = os.listdir('input')
 output_list = os.listdir('output')
 for j in range(len(output_list)):
-    os.remove('output\saida' + str(j) + '.txt')
+    if j != 0:
+        os.remove('output\saida' + str(j) + '.txt')
 for j in range(len(input_list)):
-    read_write_file(j)
+    if j != 0:
+        read_write_file(j)

@@ -1,29 +1,8 @@
-% Tô declarando: %% uma String %
-cadeia a = "é isso mesmo";
+inteir a_;
+real _b = -3.4;
 
-% isso é um comentario de bloco {#
-Este é o comentario de bloco
-#}
-
-% novo valor de a
-
-a = " opa, beleza?
-escreva(a)
-
-{# b terá o valor da resposta de a#}
-
-b = "Tudo certo \n"
-escreva('b')
-
-% outra vez a:
-
-a = " Serio?
-"
-escreva('aa')
-
-{# 
-por ultimo b:
-
-
-b = vazio
-escreva(b)
+se(a_ & _b);
+    escrevva("Ta certo, confia")
+sena o(a_ | -b)
+    _b = -3.4.4.4$4.
+    a_$ = 858.8aaaa .8

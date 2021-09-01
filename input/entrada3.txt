@@ -1,8 +1,10 @@
-inteir a_;
-real _b = -3.4;
-
-se(a_ & _b);
-    escrevva("Ta certo, confia")
-sena o(a_ | -b)
-    _b = -3.4.4.4$4.
-    a_$ = 858.8aaaa .8
+inteiro a = leia("Coloque um inteiro:");
+se(a<=9){
+    escreva("Isso eh uma unidade");
+} senao se(a<100){
+    escreva("Isso eh uma dezena");
+} senao se(a<=999){
+    escreva("Isso eh uma centena");
+} senao{
+    escreva("Isso eh acima de centena");
+}
